@@ -1,52 +1,37 @@
-import express from 'express';
-import bodyParser from 'body-parser';
-
-import { parseTelegramUpdate } from './parser.js';
-import { normalizeRecord } from './normalize.js';
-import { appendRow, updateRowByMessageId } from './sheet.js';
+import express from "express";
+import bodyParser from "body-parser";
+import { parseTelegramUpdate } from "./parser.js";
 
 const app = express();
-app.use(bodyParser.json());
-
 const PORT = process.env.PORT || 10000;
 
-app.post('/', async (req, res) => {
+app.use(bodyParser.json());
+
+// Health check
+app.get("/", (req, res) => {
+  res.status(200).send("Telegram Visibility Bot is running");
+});
+
+// ✅ TELEGRAM WEBHOOK — MUST MATCH /webhook
+app.post("/webhook", async (req, res) => {
   try {
-    const update = req.body;
+    console.log("=== TELEGRAM WEBHOOK RECEIVED ===");
+    console.log(JSON.stringify(req.body, null, 2));
 
-    // --- EDIT MESSAGE ---
-    if (update.edited_message) {
-      const parsed = parseTelegramUpdate(update.edited_message);
-      const normalized = normalizeRecord(parsed);
+    // Process update (photo, edit, etc.)
+    await parseTelegramUpdate(req.body);
 
-      await updateRowByMessageId(parsed.message_id, {
-        caption: normalized.caption,
-        outlet_id: normalized.outlet_id,
-        outlet_name: normalized.outlet_name,
-        edited_at: new Date().toISOString(),
-        edited_by: normalized.username
-      });
-
-      return res.sendStatus(200);
-    }
-
-    // --- NEW MESSAGE ---
-    if (update.message) {
-      const parsed = parseTelegramUpdate(update.message);
-      const normalized = normalizeRecord(parsed);
-
-      await appendRow(normalized);
-    }
-
+    // Telegram requires fast 200 OK
     res.sendStatus(200);
   } catch (err) {
-    console.error('Webhook error:', err);
-    res.sendStatus(500);
+    console.error("Webhook processing error:", err);
+    res.sendStatus(200); // Still return 200 to avoid Telegram retry loop
   }
 });
 
-app.get('/', (_, res) => res.send('OK'));
-
 app.listen(PORT, () => {
+  console.log("===========================================");
   console.log(`Server running on port ${PORT}`);
+  console.log(`Webhook endpoint: /webhook`);
+  console.log("===========================================");
 });
