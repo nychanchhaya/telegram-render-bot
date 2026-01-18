@@ -1,93 +1,70 @@
-/**
- * Normalize caption text into outlet_id + outlet_name
- * Accepts:
- *   - 1234567 - Sreyvin
- *   - Sreyvin - 1234567
- */
-function normalizeCaption(raw = '') {
-  const text = raw.trim();
+// normalize.js
 
-  if (!text) {
+export function normalizeCaption(captionRaw) {
+  if (!captionRaw || typeof captionRaw !== "string") {
     return {
-      outlet_id: 'Required',
-      outlet_name: 'Required',
-      caption: 'Required',
+      outlet_id: "REQUIRED",
+      outlet_name: "REQUIRED",
+      caption_normalized: "REQUIRED"
     };
   }
 
-  const parts = text.split('-').map(p => p.trim());
+  const cleaned = captionRaw.trim();
 
-  if (parts.length !== 2) {
-    return {
-      outlet_id: 'Required',
-      outlet_name: 'Required',
-      caption: text,
-    };
-  }
+  // Support:
+  // 1234567 - Raksmy
+  // Raksmy - 1234567
+  const parts = cleaned.split("-").map(p => p.trim());
 
-  const [a, b] = parts;
+  let outlet_id = "REQUIRED";
+  let outlet_name = "REQUIRED";
 
-  const isANumber = /^\d+$/.test(a);
-  const isBNumber = /^\d+$/.test(b);
-
-  if (isANumber && !isBNumber) {
-    return { outlet_id: a, outlet_name: b, caption: text };
-  }
-
-  if (!isANumber && isBNumber) {
-    return { outlet_id: b, outlet_name: a, caption: text };
+  if (parts.length === 2) {
+    if (/^\d+$/.test(parts[0])) {
+      outlet_id = parts[0];
+      outlet_name = parts[1];
+    } else if (/^\d+$/.test(parts[1])) {
+      outlet_id = parts[1];
+      outlet_name = parts[0];
+    }
   }
 
   return {
-    outlet_id: 'Required',
-    outlet_name: 'Required',
-    caption: text,
+    outlet_id,
+    outlet_name,
+    caption_normalized:
+      outlet_id !== "REQUIRED"
+        ? `${outlet_id} | ${outlet_name}`
+        : "REQUIRED"
   };
 }
 
-/**
- * MAIN EXPORT — used by server.js
- */
-export function normalizeRecord(parsed) {
-  const now = new Date().toISOString();
-  const captionNorm = normalizeCaption(parsed.caption_raw || '');
+export function normalizeRecord(raw) {
+  const captionRaw = raw.caption || null;
+  const normalizedCaption = normalizeCaption(captionRaw);
 
   return {
-    message_id: String(parsed.message_id),
-    chat_id: String(parsed.chat_id),
-    chat_title: parsed.chat_title || '',
-    username: parsed.username || '',
-    user_id: parsed.user_id || '',
+    message_id: raw.message_id,
+    group_id: raw.chat?.id,
+    group_name: raw.chat?.title || null,
 
-    // Outlet
-    outlet_id: captionNorm.outlet_id,
-    outlet_name: captionNorm.outlet_name,
+    salesman_username: raw.from?.username || null,
+    salesman_id: "REQUIRED",
 
-    // Salesman
-    salesman_id: parsed.salesman_id || parsed.user_id || '',
+    caption_raw: captionRaw,
+    ...normalizedCaption,
 
-    // Photos
-    photo_count: parsed.photo_count || 0,
-    photo_file_ids: parsed.photo_file_ids?.join(',') || '',
-    photo_width: parsed.photo_width || '',
-    photo_height: parsed.photo_height || '',
-    photo_size: parsed.photo_size || '',
+    photo_count: raw.photo?.length || 0,
+    photo_file_id: raw.photo?.at(-1)?.file_id || null,
+    photo_width: raw.photo?.at(-1)?.width || null,
+    photo_height: raw.photo?.at(-1)?.height || null,
 
-    // Caption
-    caption_raw: parsed.caption_raw || '',
-    caption: captionNorm.caption,
+    latitude: raw.location?.latitude ?? "REQUIRED",
+    longitude: raw.location?.longitude ?? "REQUIRED",
 
-    // Location
-    latitude: parsed.latitude ?? 'Required',
-    longitude: parsed.longitude ?? 'Required',
+    telegram_date: new Date(raw.date * 1000).toISOString(),
+    received_at: new Date().toISOString(),
 
-    // Forwarding
-    is_forwarded: parsed.is_forwarded ? 'YES' : 'NO',
-    original_sender: parsed.original_sender || '',
-
-    // Audit
-    created_at: now,
-    edited_at: '',
-    edited_by: '',
+    edited: false
   };
 }
