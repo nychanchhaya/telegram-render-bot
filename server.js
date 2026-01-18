@@ -17,7 +17,9 @@ app.get("/", (req, res) => {
   res.send("Render service is running");
 });
 
-app.post("/", (req, res) => {
+app.post("/webhook", (req, res) => {
+  console.log("=== TELEGRAM WEBHOOK RECEIVED ===");
+  console.log(JSON.stringify(req.body, null, 2));
   res.status(200).send("OK");
 });
 
