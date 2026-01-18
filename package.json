@@ -1,7 +1,6 @@
 {
   "name": "telegram-render-bot",
   "version": "1.0.0",
-  "description": "Telegram webhook bot hosted on Render",
   "private": true,
   "type": "module",
   "main": "server.js",
