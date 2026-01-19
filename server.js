@@ -1,34 +1,35 @@
 import express from 'express';
-import bodyParser from 'body-parser';
-
 import { parseTelegramUpdate } from './parser.js';
-import { appendSubmission, updateSubmission } from './sheet.js';
+import { appendSubmission, updateRowByMessageId } from './sheet.js';
 
 const app = express();
-app.use(bodyParser.json());
+app.use(express.json());
+
+app.get('/', (req, res) => {
+  res.status(200).send('OK');
+});
 
 app.post('/webhook', async (req, res) => {
   try {
     const update = req.body;
-
     const record = parseTelegramUpdate(update);
+
     if (!record) {
-      return res.sendStatus(200);
+      return res.status(200).send('Ignored');
     }
 
     if (record.edited) {
-      await updateSubmission(record);
-      console.log('Updated row for edited message', record.message_id);
+      console.log('>>> UPDATE EXISTING ROW');
+      await updateRowByMessageId(record.message_id, record);
     } else {
+      console.log('>>> APPEND NEW ROW');
       await appendSubmission(record);
-      console.log('>>> CALLING appendSubmission');
-      console.log('Appended new row', record.message_id);
     }
 
-    res.sendStatus(200);
+    res.status(200).send('OK');
   } catch (err) {
-    console.error('Webhook error', err);
-    res.sendStatus(500);
+    console.error('Webhook error:', err);
+    res.status(500).send('ERROR');
   }
 });
 
