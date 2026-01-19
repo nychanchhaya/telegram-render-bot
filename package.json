@@ -1,19 +1,14 @@
 {
   "name": "telegram-render-bot",
   "version": "1.0.0",
-  "description": "Telegram webhook bot with normalization and Google Sheets logging",
   "type": "module",
-  "main": "server.js",
+  "main": "src/server.js",
   "scripts": {
-    "start": "node server.js"
-  },
-  "engines": {
-    "node": ">=18"
+    "start": "node src/server.js"
   },
   "dependencies": {
     "express": "^4.19.2",
-    "google-spreadsheet": "^4.1.1",
-    "node-fetch": "^3.3.2",
-    "uuid": "^9.0.1"
+    "google-spreadsheet": "^4.1.2",
+    "node-fetch": "^3.3.2"
   }
 }
