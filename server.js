@@ -21,6 +21,7 @@ app.post('/webhook', async (req, res) => {
       console.log('Updated row for edited message', record.message_id);
     } else {
       await appendSubmission(record);
+      console.log('>>> CALLING appendSubmission');
       console.log('Appended new row', record.message_id);
     }
 
