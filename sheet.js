@@ -19,24 +19,31 @@ export async function appendSubmission(r) {
   const sheet = doc.sheetsByTitle[SHEET_NAME];
 
   await sheet.addRow({
-    received_at: r.received_at,
-    telegram_date: r.telegram_date,
-    edited: false,
-    edited_at: "",
-    edited_by: "",
-    group_id: r.group_id,
-    group_name: r.group_name,
-    message_id: r.message_id,
-    telegram_username: r.telegram_username,
-    outlet_id: r.outlet_id,
-    outlet_name: r.outlet_name,
-    caption_raw: r.caption_raw,
-    caption_normalized: r.caption_normalized,
-    photo_file_id: r.photo_file_id,
-    photo_width: r.photo_width,
-    photo_height: r.photo_height,
-    photo_count: r.photo_count
-  });
+  received_at: r.received_at,
+  telegram_date: r.telegram_date,
+  edited: false,
+  edited_at: "",
+  edited_by: "",
+  group_id: r.group_id,
+  group_name: r.group_name,
+  message_id: r.message_id,
+  telegram_username: r.telegram_username,
+
+  salesman_id: r.salesman_id,        // ✅ REQUIRED
+  outlet_id: r.outlet_id,
+  outlet_name: r.outlet_name,
+
+  caption_raw: r.caption_raw,
+  caption_normalized: r.caption_normalized,
+
+  photo_file_id: r.photo_file_id,
+  photo_width: r.photo_width,
+  photo_height: r.photo_height,
+  photo_count: r.photo_count,
+
+  latitude: r.latitude,              // ✅ REQUIRED
+  longitude: r.longitude             // ✅ REQUIRED
+});
 }
 
 export async function updateSubmission(r) {
