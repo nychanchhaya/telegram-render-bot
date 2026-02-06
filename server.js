@@ -7,24 +7,20 @@ app.use(bodyParser.json());
 
 app.post("/", async (req, res) => {
   try {
-    const payload = req.body;
+    const update = req.body;
 
-    // Telegram edit
-    if (payload.edited_message) {
-      console.log(">>> UPDATE EXISTING ROW");
-      await updateSubmission(payload.edited_message);
+    if (update.message?.photo) {
+      await appendSubmission(update.message);
     }
 
-    // Telegram new message
-    if (payload.message) {
-      console.log(">>> APPEND NEW ROW");
-      await appendSubmission(payload.message);
+    if (update.edited_message) {
+      await updateSubmission(update.edited_message);
     }
 
-    res.send("OK");
+    res.sendStatus(200);
   } catch (err) {
     console.error("Webhook error:", err);
-    res.status(500).send("ERROR");
+    res.sendStatus(500);
   }
 });
 
