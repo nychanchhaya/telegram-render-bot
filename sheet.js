@@ -38,3 +38,24 @@ export async function updateSubmissionByMessageId(messageId, updates) {
   Object.assign(row, updates);
   await row.save();
 }
+export async function updateSubmission(messageId, updatedRecord) {
+  const sheet = await getSheet();
+
+  const rows = await sheet.getRows();
+
+  const row = rows.find(r => String(r.message_id) === String(messageId));
+
+  if (!row) {
+    console.log("⚠️ No existing row found, skipping update");
+    return;
+  }
+
+  Object.entries(updatedRecord).forEach(([key, value]) => {
+    if (key in row) {
+      row[key] = value;
+    }
+  });
+
+  await row.save();
+  console.log("✅ Row updated:", messageId);
+}
