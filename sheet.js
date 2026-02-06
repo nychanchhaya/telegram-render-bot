@@ -1,10 +1,7 @@
 import { GoogleSpreadsheet } from "google-spreadsheet";
 
-const SHEET_NAME = "Submissions";
+const SHEET_NAME = "Submissions"; // ⚠️ MUST MATCH YOUR EXISTING SHEET NAME
 
-/**
- * Connect to Google Sheet
- */
 async function getSheet() {
   const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID);
 
@@ -17,34 +14,41 @@ async function getSheet() {
 
   const sheet = doc.sheetsByTitle[SHEET_NAME];
   if (!sheet) {
-    throw new Error("Submissions sheet not found");
+    throw new Error(`Sheet "${SHEET_NAME}" not found`);
   }
 
   return sheet;
 }
 
 /**
- * Append new Telegram submission
+ * APPEND — new Telegram message
+ * ⚠️ Uses ONLY locked columns
  */
 export async function appendSubmission(message) {
   const sheet = await getSheet();
 
   await sheet.addRow({
     message_id: message.message_id,
-    telegram_date: new Date(message.date * 1000).toISOString(),
+    group_id: message.chat?.id || "",
+    group_name: message.chat?.title || "",
     telegram_username: message.from?.username || "",
+    salesman_id: "",
+    outlet_id: "",
+    outlet_name: "",
     caption_raw: message.caption || "",
+    caption_normalized: "",
+    photo_count: message.photo ? message.photo.length : 0,
+    latitude: message.location?.latitude || "",
+    longitude: message.location?.longitude || "",
     edited: false,
     edited_at: "",
     edited_by: "",
-    latitude: message.location?.latitude || "",
-    longitude: message.location?.longitude || "",
     created_at: new Date().toISOString(),
   });
 }
 
 /**
- * Update existing submission on edit
+ * UPDATE — edited Telegram message
  */
 export async function updateSubmission(editedMessage) {
   const sheet = await getSheet();
@@ -55,7 +59,7 @@ export async function updateSubmission(editedMessage) {
   );
 
   if (!row) {
-    console.warn("Edited message not found in sheet");
+    console.warn("Edited message not found, skipping update");
     return;
   }
 
