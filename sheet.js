@@ -1,7 +1,8 @@
 import { GoogleSpreadsheet } from "google-spreadsheet";
 
-const SHEET_NAME = "Submissions"; // ⚠️ MUST MATCH YOUR EXISTING SHEET NAME
+const SHEET_NAME = "Submissions"; // ⚠️ DO NOT CHANGE
 
+// ✅ MUST BE DEFINED BEFORE USE
 async function getSheet() {
   const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID);
 
@@ -14,16 +15,13 @@ async function getSheet() {
 
   const sheet = doc.sheetsByTitle[SHEET_NAME];
   if (!sheet) {
-    throw new Error(`Sheet "${SHEET_NAME}" not found`);
+    throw new Error(`Submissions sheet not found`);
   }
 
   return sheet;
 }
 
-/**
- * APPEND — new Telegram message
- * ⚠️ Uses ONLY locked columns
- */
+// ================= APPEND =================
 export async function appendSubmission(message) {
   const sheet = await getSheet();
 
@@ -47,9 +45,7 @@ export async function appendSubmission(message) {
   });
 }
 
-/**
- * UPDATE — edited Telegram message
- */
+// ================= UPDATE =================
 export async function updateSubmission(editedMessage) {
   const sheet = await getSheet();
   const rows = await sheet.getRows();
@@ -58,10 +54,7 @@ export async function updateSubmission(editedMessage) {
     r => String(r.message_id) === String(editedMessage.message_id)
   );
 
-  if (!row) {
-    console.warn("Edited message not found, skipping update");
-    return;
-  }
+  if (!row) return;
 
   row.caption_raw = editedMessage.caption || row.caption_raw;
   row.edited = true;
